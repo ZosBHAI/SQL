@@ -7,11 +7,11 @@ CREATE TABLE staged.CreditCardMaster (
     AccountID INT NOT NULL,
     CardHolderName VARCHAR(100),
     ExpiryDate DATE,
-    CreditLimit DECIMAL(18, 2)
-    PRIMARY KEY (PAN, ChangeDate)
-);
+    CreditLimit DECIMAL(18, 2),
+    row_extract_dttm VARCHAR(20)
+ );
 Create schema target;
---- target table creation DDL
+DRop table target.CreditCardMaster;
 CREATE TABLE target.CreditCardMaster (
     PAN VARCHAR(16) NOT NULL,
     CardPIN CHAR(4) NOT NULL,
@@ -20,12 +20,15 @@ CREATE TABLE target.CreditCardMaster (
     CardHolderName VARCHAR(100),
     ExpiryDate DATE,
     CreditLimit DECIMAL(18, 2),
+    row_extract_dttm VARCHAR(20),
 	EffectiveDate DATE,
     ExpirationDate DATE,
     IsActive BIT,
-    IUpdateDttm datetime,
-    PRIMARY KEY (PAN)
+    UpdateDttm datetime
+    
 );
+-----INSERT sample data
+
 
 
 ----- SCD type 2 logic implementation ----
@@ -162,18 +165,6 @@ SET @sql = @sql + '
 PRINT @sql;
 EXEC sp_executesql @sql;
 
-------Draft version -------------
--- Create the CreditCardMaster table
-CREATE TABLE CreditCardMaster (
-    PAN VARCHAR(16) NOT NULL,
-    CardPIN CHAR(4) NOT NULL,
-    ChangeDate DATE NOT NULL,
-    AccountID INT NOT NULL,
-    CardHolderName VARCHAR(100),
-    ExpiryDate DATE,
-    CreditLimit DECIMAL(18, 2),
-    PRIMARY KEY (PAN, ChangeDate)
-);
 
 -- Insert sample data into CreditCardMaster
 INSERT INTO staged.CreditCardMaster (PAN, CardPIN, ChangeDate, AccountID, CardHolderName, ExpiryDate, CreditLimit,row_extract_dttm)
