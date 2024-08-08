@@ -27,10 +27,53 @@ CREATE TABLE target.CreditCardMaster (
     UpdateDttm datetime
     
 );
------INSERT sample data
+-----INSERT sample data ---RUN BOOK------
+
+-- Insert sample data into CreditCardMaster
+INSERT INTO staged.CreditCardMaster (PAN, CardPIN, ChangeDate, AccountID, CardHolderName, ExpiryDate, CreditLimit,row_extract_dttm)
+VALUES
+('9234567812345679', '1234', '2024-01-01', 1, 'New John Doe', '2025-12-31', 5000.00,'2024-07-03 13:20:16'),
+('9765432187654329', '2345', '2024-03-01', 2, 'New Jane Smith', '2026-11-30', 10000.00,'2024-07-03 13:20:16')
+
+--After running the PROC 
+EXEC sp_ImplementSCDType2 @StageSchema = 'staged',@TargetSchema = 'target',@StageTable = 'CreditCardMaster',@TargetTable = 'CreditCardMaster',@PrimaryKeys = 'PAN,ChangeDate'
+----Update the existing records 
+update staged.CreditCardMaster
+set ExpiryDate = '2027-03-01'
+where PAN = '9765432187654329';
+
+select * from staged.CreditCardMaster;
+---modifying  the primary  key  it should be treated as new record
+update staged.CreditCardMaster
+set ChangeDate = '2027-03-01'
+where PAN = '9234567812345679';
 
 
+---New records inserted
+INSERT INTO staged.CreditCardMaster (PAN, CardPIN, ChangeDate, AccountID, CardHolderName, ExpiryDate, CreditLimit,row_extract_dttm)
+VALUES
+('1234567812345679', '1234', '2024-01-01', 1, 'Bob', '2025-12-31', 5000.00,'2024-07-03 13:20:16'),
+('1235432187654329', '2345', '2024-03-01', 2, 'Jack', '2026-11-30', 10000.00,'2024-07-03 13:20:16')
 
+
+EXEC sp_ImplementSCDType2 @StageSchema = 'staged',@TargetSchema = 'target',@StageTable = 'CreditCardMaster',@TargetTable = 'CreditCardMaster',@PrimaryKeys = 'PAN,ChangeDate'
+------------OR --------------
+EXEC sp_MergeImplementationSCDType2 @StageSchema = 'staged',@TargetSchema = 'target',@StageTable = 'CreditCardMaster',@TargetTable = 'CreditCardMaster',@PrimaryKeys = 'PAN,ChangeDate'
+
+-- Verify the data
+select * from target.CreditCardMaster;
+select * from staged.CreditCardMaster;
+---deleting the record from staged table
+delete from staged.CreditCardMaster where PAN = '9234567812345679';
+EXEC sp_ImplementSCDType2 @StageSchema = 'staged',@TargetSchema = 'target',@StageTable = 'CreditCardMaster',@TargetTable = 'CreditCardMaster',@PrimaryKeys = 'PAN,ChangeDate'
+
+
+--------------------======o R ========---------
+EXEC sp_MergeImplementationSCDType2 @StageSchema = 'staged',@TargetSchema = 'target',@StageTable = 'CreditCardMaster',@TargetTable = 'CreditCardMaster',@PrimaryKeys = 'PAN,ChangeDate'
+
+---For merge logic
+EXEC sp_MergeImplementationSCDType2 @StageSchema = 'staged',@TargetSchema = 'target',@StageTable = 'CreditCardMaster',@TargetTable = 'CreditCardMaster',@PrimaryKeys = 'PAN,ChangeDate'
+-----------------------==================TEST RUN STEP E N D ======================------------------------------------
 ----- SCD type 2 logic implementation ----
 --1) Exclude metadata columns in 
 --2)  Primary Key columns
@@ -166,15 +209,7 @@ PRINT @sql;
 EXEC sp_executesql @sql;
 
 
--- Insert sample data into CreditCardMaster
-INSERT INTO staged.CreditCardMaster (PAN, CardPIN, ChangeDate, AccountID, CardHolderName, ExpiryDate, CreditLimit,row_extract_dttm)
-VALUES
-('9234567812345679', '1234', '2024-01-01', 1, 'New John Doe', '2025-12-31', 5000.00,'2024-07-03 13:20:16'),
-('9765432187654329', '2345', '2024-03-01', 2, 'New Jane Smith', '2026-11-30', 10000.00,'2024-07-03 13:20:16')
 
-
--- Verify the data
-SELECT * FROM CreditCardMaster;
 
 create SCHEMA staged;
 
