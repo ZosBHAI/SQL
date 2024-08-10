@@ -725,3 +725,35 @@ GO
 
 EXEC sp_MergeImplementationSCDType2 @StageSchema = 'staged',@TargetSchema = 'target',@StageTable = 'CreditCardMaster',@TargetTable = 'CreditCardMaster',@PrimaryKeys = 'PAN,ChangeDate'
 
+
+----SQL that is generated for the table 
+INSERT INTO target.CreditCardMaster ([PAN], [CardPIN], [ChangeDate], [AccountID], [CardHolderName], [ExpiryDate], [CreditLimit], [row_extract_dttm], EffectiveDate, ExpirationDate, IsActive, UpdateDttm)
+		SELECT [PAN], [CardPIN], [ChangeDate], [AccountID], [CardHolderName], [ExpiryDate], [CreditLimit], [row_extract_dttm], GETDATE(), NULL, 1 , GETDATE()
+		FROM  ( 
+			MERGE target.CreditCardMaster AS T
+			USING staged.CreditCardMaster S
+			ON T.PAN = S.PAN AND T.ChangeDate = S.ChangeDate
+			AND T.IsActive = 1
+			WHEN MATCHED AND 
+			(T.CardPIN <> S.CardPIN OR T.AccountID <> S.AccountID OR T.CardHolderName <> S.CardHolderName OR T.ExpiryDate <> S.ExpiryDate OR T.CreditLimit <> S.CreditLimit)
+	 THEN  UPDATE 
+			SET ExpirationDate = GETDATE(),
+			 UpdateDttm = GETDATE(),
+			IsActive = 0
+	WHEN NOT MATCHED BY TARGET
+	   THEN INSERT ( 
+		   [PAN], [CardPIN], [ChangeDate], [AccountID], [CardHolderName], [ExpiryDate], [CreditLimit], [row_extract_dttm], EffectiveDate, ExpirationDate, IsActive, UpdateDttm)
+		   VALUES( S.[PAN], S.[CardPIN], S.[ChangeDate], S.[AccountID], S.[CardHolderName], S.[ExpiryDate], S.[CreditLimit], S.[row_extract_dttm], GETDATE(), NULL, 1 , GETDATE()
+		   )
+	WHEN NOT MATCHED BY SOURCE AND  T.IsActive = 1
+	   THEN UPDATE 
+		SET
+		ExpirationDate = GETDATE(),
+			 UpdateDttm = GETDATE(),
+			IsActive = 0
+			OUTPUT $action AS Action
+					,[S].*
+					) AS MergeOutput
+		WHERE MergeOutput.Action = 'UPDATE' 
+		AND PAN IS NOT NULL;
+
