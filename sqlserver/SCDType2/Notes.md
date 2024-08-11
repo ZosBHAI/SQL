@@ -1,4 +1,4 @@
-# Notes (In progress)
+# Notes
 
 ## Merge Vs Insert,Update,Delete
 1. MERGE statement runs insert, update, or delete operations on a target table from the results of a join with a source table.
@@ -61,20 +61,30 @@ OR T.ExpiryDate <> S.ExpiryDate OR T.CreditLimit <> S.CreditLimit)
 ```
 
 
-## Stored Procedure SCD Type2 control flow
+## Stored Procedure SCD Type2 control flow (without MERGE)
 ```mermaid
 graph TD
-    A[Start] --> B[Declare Variables]
-    B --> C[Set Full Table Names]
-    C --> D[Set Primary Key Conditions]
-    D --> E[Parse Primary Keys]
-    E --> F[Capture Non-Primary Data Columns]
-    F --> G[Build Join Condition]
-    G --> H[Build Data Condition]
-    H --> I[Deactivate Current Active Records in Target Table]
+    AZ[Stage table details]  --> |i/p|D1[sp_ImplementSCDType2]
+    BZ[Target table details] --> |i/p|D1[sp_ImplementSCDType2]
+    CZ[primary key] --> |i/p|D1[sp_ImplementSCDType2]
+    DZ[SCD metadata Columns] --> |i/p|D1[sp_ImplementSCDType2]
+      
+ 
+    D1 --> D[Build FQN for  tables & Build NULL check condition]
+    D --> E[Parse Primary Keys & Save it in Table Variable]
+    E --> F[Capture Non-Primary Data Columns in Table Variable]
+    F --> G[Construct Join Condition based on the Primary Keys]
+    G --> H[Construct conditions to Check for changes in Data  Column]
+    H --> I1[Create a temporary variable to capture dynamic SQL generated in below steps]
+    
+    I1 --> I[Update to Deactivate Current Active Records in Target Table]
+    subgraph  Dynamic SQL  Generation
     I --> J[Insert New Active Records into Target Table]
     J --> K[Update Deleted Records in Target Table]
-    K --> L[Print and Execute SQL]
-    L --> M[End]
+    K --> K1[Save dynamically gen SQL to temp variable]
+    end
+    K1 --> L[Print SQL in temp variable]
+    L --> M[Execute SQL in temp variable]
+
 
 ```
