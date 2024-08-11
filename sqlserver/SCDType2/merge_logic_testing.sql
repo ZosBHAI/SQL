@@ -476,7 +476,7 @@ FROM @NonPrimaryDataColumnsTable
 END;
 GO
 
-EXEC sp_ImplementSCDType2 @StageSchema = 'staged',@TargetSchema = 'target',@StageTable = 'CreditCardMaster',@TargetTable = 'CreditCardMaster',@PrimaryKeys = 'PAN,ChangeDate'
+	EXEC sp_ImplementSCDType2 @StageSchema = 'staged',@TargetSchema = 'target',@StageTable = 'CreditCardMaster',@TargetTable = 'CreditCardMaster',@PrimaryKeys = 'PAN,ChangeDate'
 
 -------------------------- E  N  D ----------------------------------------
 
@@ -690,8 +690,9 @@ SET NOCOUNT OFF;
 			MERGE '  + @FullTargetTableName + ' AS T
 			USING ' + @FullStageTableName + ' S
 			ON ' + @joinCondition + '
-			AND T.' + @IsActiveColumn + ' = 1
+			
 			WHEN MATCHED AND 
+			AND T.' + @IsActiveColumn + ' = 1
 			(' + @DataCondition + ')' 
 
 	SET @sql = @sql + '
@@ -733,8 +734,10 @@ INSERT INTO target.CreditCardMaster ([PAN], [CardPIN], [ChangeDate], [AccountID]
 			MERGE target.CreditCardMaster AS T
 			USING staged.CreditCardMaster S
 			ON T.PAN = S.PAN AND T.ChangeDate = S.ChangeDate
-			AND T.IsActive = 1
+	------		AND T.IsActive = 1 INefficent way
 			WHEN MATCHED AND 
+			T.IsActive = 1
+			AND
 			(T.CardPIN <> S.CardPIN OR T.AccountID <> S.AccountID OR T.CardHolderName <> S.CardHolderName OR T.ExpiryDate <> S.ExpiryDate OR T.CreditLimit <> S.CreditLimit)
 	 THEN  UPDATE 
 			SET ExpirationDate = GETDATE(),
