@@ -1,4 +1,4 @@
-----staged/source
+	----staged/source
 create schema staged;
 CREATE TABLE staged.CreditCardMaster (
     PAN VARCHAR(16) NOT NULL,
