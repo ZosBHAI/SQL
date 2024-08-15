@@ -70,9 +70,10 @@ graph TD
     DZ[SCD metadata Columns] --> |i/p|D1[sp_ImplementSCDType2]
       
  
-    D1 --> D[Build FQN for  tables & Build NULL check condition]
+    D1 --> D[Build FQN for  tables ]
     D --> E[Parse Primary Keys & Save it in Table Variable]
-    E --> F[Capture Non-Primary Data Columns in Table Variable]
+    E --> E1[Build NULL check condition]
+    E1 --> F[Capture Non-Primary Data Columns in Table Variable]
     F --> G[Construct Join Condition based on the Primary Keys]
     G --> H[Construct conditions to Check for changes in Data  Column]
     H --> I1[Create a temporary variable to capture dynamic SQL generated in below steps]
